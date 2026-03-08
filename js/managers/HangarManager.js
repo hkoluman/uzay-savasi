@@ -17,8 +17,9 @@ export const HangarManager = {
         { name: 'skin_custom', cost: 500, color: '#f00', spriteKey: 'playerShips2' },
         { name: 'skin_grey', cost: 1000, color: '#aaa', spriteKey: 'playerShips4' },
         { name: 'skin_yellow', cost: 2000, color: '#ff0', spriteKey: 'playerShips3' },
-        { name: 'skin_gold', cost: 5000, color: '#ffd700' },
-        { name: 'skin_ghost', cost: 10000, color: '#555' }
+        { name: 'skin_boss', cost: 5000, color: '#f00', spriteKey: 'bossShip' },
+        { name: 'skin_gold', cost: 10000, color: '#ffd700' },
+        { name: 'skin_ghost', cost: 25000, color: '#555' }
     ],
 
     costs: {

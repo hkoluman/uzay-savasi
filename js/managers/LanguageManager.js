@@ -53,6 +53,7 @@ export const LanguageManager = {
             'skin_custom': 'İkinci Kostüm',
             'skin_grey': 'Üçüncü Kostüm (Gri)',
             'skin_yellow': 'Dördüncü Kostüm (Sarı)',
+            'skin_boss': 'Ulu Boss Gemisi',
             'skin_gold': 'Altın Kartal',
             'skin_ghost': 'Hayalet',
             
@@ -112,6 +113,7 @@ export const LanguageManager = {
             'skin_custom': 'Second Skin',
             'skin_grey': 'Third Skin (Grey)',
             'skin_yellow': 'Fourth Skin (Yellow)',
+            'skin_boss': 'Ultimate Boss Ship',
             'skin_gold': 'Golden Eagle',
             'skin_ghost': 'Ghost',
             
