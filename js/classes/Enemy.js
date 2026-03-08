@@ -7,12 +7,13 @@ export class Enemy {
         this.y = y;
         this.width = 50; 
         this.height = 50;
-        this.type = type; // NORMAL, KAMIKAZE, SNIPER, ADVANCED_FIGHTER
+        this.type = type; // NORMAL, KAMIKAZE, SNIPER, ADVANCED_FIGHTER, STRIKE_FIGHTER
 
         // Stats
         this.level = stats.level;
         this.health = stats.health;
         if (this.type === 'ADVANCED_FIGHTER') this.health = 5 + (this.level * 2);
+        if (this.type === 'STRIKE_FIGHTER') this.health = 4 + (this.level * 1.5);
         this.maxHealth = this.health;
 
         // Base values
@@ -20,6 +21,7 @@ export class Enemy {
         if (this.type === 'KAMIKAZE') this.speed = 4 + (this.level * 0.5);
         if (this.type === 'SNIPER') this.speed = 1.5;
         if (this.type === 'ADVANCED_FIGHTER') this.speed = 2 + (this.level * 0.2);
+        if (this.type === 'STRIKE_FIGHTER') this.speed = 2.5 + (this.level * 0.3);
 
         // Level Colors
         const levelColors = ['#f00', '#f90', '#90f', '#333'];
@@ -31,21 +33,25 @@ export class Enemy {
         // Special Colors for Types
         if (this.type === 'KAMIKAZE') this.color = '#ff0'; 
         if (this.type === 'SNIPER') this.color = '#0ff'; 
-        if (this.type === 'ADVANCED_FIGHTER') this.color = '#f0f'; // Purple/Magenta
+        if (this.type === 'ADVANCED_FIGHTER') this.color = '#f0f'; 
+        if (this.type === 'STRIKE_FIGHTER') this.color = '#09f'; // Deep Blue Tech
 
         this.markedForDeletion = false;
-        this.canShoot = (this.type !== 'KAMIKAZE') && (Math.random() < 0.2 + (this.level * 0.05) || this.type === 'ADVANCED_FIGHTER');
+        this.canShoot = (this.type !== 'KAMIKAZE') && (Math.random() < 0.2 + (this.level * 0.05) || this.type === 'ADVANCED_FIGHTER' || this.type === 'STRIKE_FIGHTER');
         this.lastShot = Date.now();
         this.fireRate = Math.max(800, 2000 - (this.level * 200));
+        
         if (this.type === 'SNIPER') this.fireRate = 1200;
         if (this.type === 'ADVANCED_FIGHTER') this.fireRate = 2000;
+        if (this.type === 'STRIKE_FIGHTER') this.fireRate = 1000;
 
-        // ADVANCED_FIGHTER burst logic
+        // Visual / Logic states
         this.burstCount = 0;
         this.isBursting = false;
         
-        // Sniper specific
+        // Side movement (vx)
         this.vx = (Math.random() - 0.5) * 4; 
+        if (this.type === 'STRIKE_FIGHTER') this.vx = (Math.random() > 0.5 ? 5 : -5);
         
         // Sprite mapping
         this.spriteIndex = 0;
@@ -65,12 +71,15 @@ export class Enemy {
     draw(ctx) {
         let spriteKey = 'enemyShips';
         if (this.type === 'ADVANCED_FIGHTER') spriteKey = 'playerShips7';
+        if (this.type === 'STRIKE_FIGHTER') spriteKey = 'playerShips8';
         
         const sprite = AssetManager.get(spriteKey);
         let renderWidth = this.width;
         let renderHeight = this.height;
 
-        if (sprite && this.type === 'ADVANCED_FIGHTER') {
+        const isCustomSprite = this.type === 'ADVANCED_FIGHTER' || this.type === 'STRIKE_FIGHTER';
+
+        if (sprite && isCustomSprite) {
             const aspect = sprite.width / sprite.height;
             renderHeight = renderWidth / aspect;
         }
@@ -92,7 +101,7 @@ export class Enemy {
 
         // --- Sprite Rendering ---
         if (sprite) {
-            if (this.type === 'ADVANCED_FIGHTER') {
+            if (isCustomSprite) {
                 ctx.drawImage(sprite, -renderWidth / 2, -renderHeight / 2, renderWidth, renderHeight);
             } else {
                 const ix = (this.spriteIndex % 2) * 512;
@@ -135,6 +144,11 @@ export class Enemy {
         } else if (this.type === 'ADVANCED_FIGHTER') {
             this.y += this.speed;
             this.x += Math.sin(timestamp / 1000) * 3;
+        } else if (this.type === 'STRIKE_FIGHTER') {
+            this.y += this.speed;
+            this.x += this.vx;
+            // High speed strafing boundaries
+            if (this.x < 100 || this.x > window.innerWidth - 100) this.vx *= -1;
         } else {
             // NORMAL
             this.y += this.speed;
@@ -143,7 +157,6 @@ export class Enemy {
 
         if (this.canShoot) {
             if (this.type === 'ADVANCED_FIGHTER') {
-                // Burst Fire Logic: 3 shots with small delay
                 if (!this.isBursting && timestamp - this.lastShot > this.fireRate) {
                     this.isBursting = true;
                     this.burstCount = 0;
@@ -160,6 +173,12 @@ export class Enemy {
                             this.lastShot = timestamp;
                         }
                     }
+                }
+            } else if (this.type === 'STRIKE_FIGHTER') {
+                if (timestamp - this.lastShot > this.fireRate) {
+                    // High-velocity railgun shot (Deep Blue)
+                    projectilePool.get(this.x, this.y, 0, 12, '#0af', 'enemy');
+                    this.lastShot = timestamp;
                 }
             } else if (timestamp - this.lastShot > this.fireRate) {
                 const bulletVy = this.type === 'SNIPER' ? 10 : 6;

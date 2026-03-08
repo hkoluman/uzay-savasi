@@ -9,6 +9,7 @@ export const AssetManager = {
         playerShips4: 'assets/player_ships4.png',
         enemyShips: 'assets/enemy_ships.png',
         playerShips7: 'assets/player_ships7.png',
+        playerShips8: 'assets/player_ships8.png',
         bossShip: 'assets/boss_ship.png',
     },
 
