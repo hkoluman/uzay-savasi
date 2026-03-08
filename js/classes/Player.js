@@ -52,49 +52,68 @@ export class Player {
     }
 
     draw(ctx, keys) {
+        const skin = HangarManager.skins[this.skinIndex];
+        const spriteKey = skin ? skin.spriteKey : 'playerShips1';
+        const sprite = AssetManager.get(spriteKey);
+        
+        // Calculate display dimensions to maintain aspect ratio
+        let renderWidth = this.width;
+        let renderHeight = this.height;
+        
+        if (sprite) {
+            const aspectRatio = sprite.width / sprite.height;
+            renderHeight = renderWidth / aspectRatio;
+        }
+
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.rotate(this.bankAngle); // Bank effect
+        ctx.rotate(this.bankAngle);
 
         // --- Muzzle Flash ---
         if (this.muzzleFlashTimer > 0) {
             ctx.fillStyle = (Math.random() > 0.5) ? '#fff' : '#0ff';
             ctx.beginPath();
-            ctx.arc(0, -this.height * 0.7, this.muzzleFlashSize * (this.muzzleFlashTimer / 4), 0, Math.PI * 2);
+            // Align with front of ship
+            ctx.arc(0, -renderHeight * 0.6, this.muzzleFlashSize * (this.muzzleFlashTimer / 4), 0, Math.PI * 2);
             ctx.fill();
 
-            // Outer glow
             ctx.shadowBlur = 15;
             ctx.shadowColor = '#0ff';
             ctx.beginPath();
-            ctx.arc(0, -this.height * 0.7, this.muzzleFlashSize * 0.5, 0, Math.PI * 2);
+            ctx.arc(0, -renderHeight * 0.6, this.muzzleFlashSize * 0.5, 0, Math.PI * 2);
             ctx.fill();
             ctx.shadowBlur = 0;
         }
 
         // --- Exhaust / Afterburner ---
         if (keys['ArrowUp'] || keys['KeyW'] || keys['Space'] || keys['Enter'] || keys['KeyQ']) {
-            ctx.fillStyle = (Math.random() > 0.5) ? '#f0f' : '#0ff';
-            const flameSize = Math.random() * 10 + 20;
-            ctx.beginPath();
-            ctx.moveTo(-10, this.height / 3);
-            ctx.lineTo(0, this.height / 3 + flameSize);
-            ctx.lineTo(10, this.height / 3);
-            ctx.fill();
+            ctx.fillStyle = (Math.random() > 0.5) ? '#f30' : '#f80'; // Orange/Red for jets
+            const flameSize = Math.random() * 15 + 25;
+            
+            const drawJet = (ox) => {
+                ctx.beginPath();
+                ctx.moveTo(ox - 10, renderHeight * 0.3);
+                ctx.lineTo(ox, renderHeight * 0.3 + flameSize);
+                ctx.lineTo(ox + 10, renderHeight * 0.3);
+                ctx.fill();
 
-            // Core flame
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.moveTo(-5, this.height / 3);
-            ctx.lineTo(0, this.height / 3 + flameSize * 0.6);
-            ctx.lineTo(5, this.height / 3);
-            ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.moveTo(ox - 5, renderHeight * 0.3);
+                ctx.lineTo(ox, renderHeight * 0.3 + flameSize * 0.6);
+                ctx.lineTo(ox + 5, renderHeight * 0.3);
+                ctx.fill();
+            };
+
+            // Double jet engines
+            drawJet(-renderWidth * 0.2);
+            drawJet(renderWidth * 0.2);
         }
 
         // --- Shield ---
         if (this.shield) {
             ctx.beginPath();
-            ctx.arc(0, 0, this.width * 0.55, 0, Math.PI * 2);
+            ctx.arc(0, 0, renderWidth * 0.55, 0, Math.PI * 2);
             ctx.strokeStyle = '#0ff';
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -103,23 +122,18 @@ export class Player {
         }
 
         // --- Sprite Rendering ---
-        const skin = HangarManager.skins[this.skinIndex];
-        const spriteKey = skin ? skin.spriteKey : 'playerShips1';
-        const sprite = AssetManager.get(spriteKey);
-        
         if (sprite) {
             ctx.drawImage(
                 sprite,
-                0, 0, sprite.width, sprite.height, // Full Source
-                -this.width / 2, -this.height / 2, this.width, this.height // Destination
+                -renderWidth / 2, -renderHeight / 2, renderWidth, renderHeight
             );
         } else {
-            // Fallback to geometric if not loaded or no spriteKey
+            // Fallback
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.moveTo(0, -this.height / 2);
-            ctx.lineTo(-this.width / 2, this.height / 2);
-            ctx.lineTo(this.width / 2, this.height / 2);
+            ctx.moveTo(0, -renderHeight / 2);
+            ctx.lineTo(-renderWidth / 2, renderHeight / 2);
+            ctx.lineTo(renderWidth / 2, renderHeight / 2);
             ctx.fill();
         }
 

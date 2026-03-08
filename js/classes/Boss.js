@@ -30,48 +30,61 @@ export class Boss {
     }
 
     draw(ctx) {
+        const sprite = AssetManager.get('bossShip');
+        let renderWidth = this.width;
+        let renderHeight = this.height;
+
+        if (sprite) {
+            const aspectRatio = sprite.width / sprite.height;
+            renderHeight = renderWidth / aspectRatio;
+        }
+
         ctx.save();
         ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
         
         // Pulsating scale
         const pulse = 1 + Math.sin(Date.now() / 1000) * 0.05;
         ctx.scale(pulse, pulse);
-        ctx.rotate(Math.PI); // Face down
+        
+        // Boss sprites usually face DOWN in modern asset packs. 
+        // If it's facing UP, we rotate. I'll keep it facing DOWN.
+        // ctx.rotate(Math.PI); // Only if PNG faces up. Let's try natural first.
 
         // --- Engines ---
-        const drawEngine = (ex, ey) => {
-            ctx.fillStyle = (Math.random() > 0.5) ? '#f00' : '#ffa500';
-            const flameSize = Math.random() * 20 + 40;
+        const drawEngine = (ex, ey, s = 1) => {
+            ctx.fillStyle = (Math.random() > 0.5) ? '#f30' : '#f00';
+            const flameSize = (Math.random() * 30 + 60) * s;
             ctx.beginPath();
-            ctx.moveTo(ex - 20, ey);
+            ctx.moveTo(ex - 25 * s, ey);
             ctx.lineTo(ex, ey - flameSize);
-            ctx.lineTo(ex + 20, ey);
+            ctx.lineTo(ex + 25 * s, ey);
             ctx.fill();
 
             // Core
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.moveTo(ex - 10, ey);
+            ctx.moveTo(ex - 12 * s, ey);
             ctx.lineTo(ex, ey - flameSize * 0.6);
-            ctx.lineTo(ex + 10, ey);
+            ctx.lineTo(ex + 12 * s, ey);
             ctx.fill();
         };
-        // Position engines relative to sprite center (remember it's rotated 180)
-        drawEngine(-this.width * 0.3, -this.height * 0.4);
-        drawEngine(0, -this.height * 0.45);
-        drawEngine(this.width * 0.3, -this.height * 0.4);
+
+        // Aligning engines with the visual "rear" of a down-facing ship (top part)
+        // Since we are not rotated now, "ey" should be negative to be at the top.
+        drawEngine(-renderWidth * 0.25, -renderHeight * 0.4, 0.8);
+        drawEngine(0, -renderHeight * 0.45, 1.2);
+        drawEngine(renderWidth * 0.25, -renderHeight * 0.4, 0.8);
 
         // --- Sprite Rendering ---
-        const sprite = AssetManager.get('bossShip');
         if (sprite) {
-            ctx.shadowBlur = 30;
+            ctx.shadowBlur = 40;
             ctx.shadowColor = '#f00';
-            ctx.drawImage(sprite, -this.width / 2, -this.height / 2, this.width, this.height);
+            ctx.drawImage(sprite, -renderWidth / 2, -renderHeight / 2, renderWidth, renderHeight);
             ctx.shadowBlur = 0;
         } else {
             // Fallback
             ctx.fillStyle = '#222';
-            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+            ctx.fillRect(-renderWidth / 2, -renderHeight / 2, renderWidth, renderHeight);
         }
 
         ctx.restore();
@@ -79,13 +92,13 @@ export class Boss {
         // --- Health Bar ---
         ctx.save();
         ctx.translate(this.x, this.y);
-        ctx.fillStyle = '#300';
-        ctx.fillRect(0, this.height + 30, this.width, 15);
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.1)'; 
+        ctx.fillRect(0, renderHeight + 30, this.width, 15);
         ctx.fillStyle = '#f00';
-        ctx.fillRect(0, this.height + 30, this.width * (this.health / this.maxHealth), 15);
+        ctx.fillRect(0, renderHeight + 30, this.width * (this.health / this.maxHealth), 15);
         ctx.strokeStyle = '#fff';
         ctx.lineWidth = 2;
-        ctx.strokeRect(0, this.height + 30, this.width, 15);
+        ctx.strokeRect(0, renderHeight + 30, this.width, 15);
         ctx.restore();
     }
 

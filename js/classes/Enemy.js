@@ -60,15 +60,17 @@ export class Enemy {
 
         // Add slight tilt based on wobble
         const tilt = Math.cos(Date.now() / 500) * 0.2;
-        ctx.rotate(tilt + Math.PI); // Rotate 180 deg to face down
+        ctx.rotate(tilt + Math.PI); // Face down (Most enemy sprites face up by default)
 
         // --- Thrusters ---
+        // Since we are rotated 180 (Math.PI), "down" is now visually "up" on screen.
+        // The rear of the ship (where engines are) is at the "top" of the rotated coordinate system.
         ctx.fillStyle = (Math.random() > 0.5) ? this.color : '#fff';
         const flameSize = Math.random() * 5 + 10;
         ctx.beginPath();
-        ctx.moveTo(-6, -this.height / 3);
-        ctx.lineTo(0, -this.height / 3 - flameSize);
-        ctx.lineTo(6, -this.height / 3);
+        ctx.moveTo(-8, -this.height * 0.4);
+        ctx.lineTo(0, -this.height * 0.4 - flameSize);
+        ctx.lineTo(8, -this.height * 0.4);
         ctx.fill();
 
         // --- Sprite Rendering ---
