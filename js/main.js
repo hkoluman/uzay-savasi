@@ -359,6 +359,7 @@ function gameLoop(timestamp) {
     stars.forEach(s => { s.update(); s.draw(ctx); });
 
     if (gameState.running) {
+        window.currentWaveNum = WaveManager.currentWave; // Share with Enemy class
         // --- UPDATES ---
         base.draw(ctx);
         WaveManager.update(enemies.length, gameState, canvas.width, () => {
