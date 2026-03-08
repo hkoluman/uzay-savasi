@@ -250,8 +250,9 @@ function spawnEnemies(timestamp) {
 
         let type = 'NORMAL';
         const rand = Math.random();
-        if (WaveManager.currentWave >= 3 && rand < 0.25) type = 'KAMIKAZE';
-        else if (WaveManager.currentWave >= 4 && rand > 0.75) type = 'SNIPER';
+        if (WaveManager.currentWave >= 6 && rand < 0.20) type = 'ADVANCED_FIGHTER';
+        else if (WaveManager.currentWave >= 3 && rand < 0.40) type = 'KAMIKAZE';
+        else if (WaveManager.currentWave >= 4 && rand > 0.80) type = 'SNIPER';
 
         enemies.push(new Enemy(x, -50, stats, type));
         window.lastEnemySpawn = timestamp;
