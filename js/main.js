@@ -14,6 +14,7 @@ import { sounds } from './managers/SoundManager.js';
 import { LanguageManager } from './managers/LanguageManager.js';
 import { AssetManager } from './managers/AssetManager.js';
 import { Planet } from './classes/Planet.js';
+import { Missions } from './managers/MissionManager.js';
 
 LanguageManager.updateUI();
 HangarManager.init();
@@ -245,6 +246,7 @@ function initGame() {
     document.getElementById('high-score').innerText = `${LanguageManager.get('high_score')}: ${highScore}`;
 
     player = new Player(canvas.width / 2, canvas.height - 100);
+    player.tookDamageThisWave = false; 
     window.playerRef = player;
     base = new Base(canvas.width, canvas.height, gameOver);
 
@@ -256,10 +258,17 @@ function initGame() {
     particlePool.clear();
     powerUps = [];
 
-    document.getElementById('start-screen').classList.add('hidden');
-    document.getElementById('game-over-screen').classList.add('hidden');
     document.getElementById('score').classList.remove('hidden');
+
+    Missions.init();
+    Missions.updateUI();
 }
+
+window.addCredits = (amount) => {
+    HangarManager.credits += amount;
+    HangarManager.save();
+    updateHangarUI();
+};
 
 function spawnEnemies(timestamp) {
     if (WaveManager.bossSpawned) return;
@@ -417,6 +426,8 @@ function gameLoop(timestamp) {
         base.draw(ctx);
         WaveManager.update(enemies.length, gameState, canvas.width, () => {
             player.missileCount = 10;
+            Missions.updateProgress('no_damage', { waveCleared: true, tookDamage: player.tookDamageThisWave });
+            player.tookDamageThisWave = false; // Reset for next wave
         });
 
         // Expose enemies for homing missiles
@@ -476,6 +487,11 @@ function gameLoop(timestamp) {
                             score += 10 + (enemy.level * 5);
                             document.getElementById('score').innerText = LanguageManager.get('score') + ': ' + score;
                             createExplosion(enemy.x, enemy.y, enemy.color);
+                            
+                            // Mission Progress
+                            Missions.updateProgress('kill');
+                            Missions.updateProgress('kill_type', { enemyType: enemy.type });
+                            Missions.updateProgress('score', { score: score });
                             // Periodic Missile Drop (Every 3 waves)
                             if (WaveManager.currentWave % 3 === 0 && !WaveManager.missileDroppedInWave) {
                                 const p = new PowerUp(enemy.x, enemy.y);
@@ -543,6 +559,7 @@ function gameLoop(timestamp) {
                         player.shield = false;
                     } else {
                         base.takeDamage(10, shakeScreen);
+                        player.tookDamageThisWave = true;
                         createExplosion(player.x, player.y, '#f00');
                     }
                 }
@@ -561,6 +578,7 @@ function gameLoop(timestamp) {
             if (enemy.y > canvas.height - 50) {
                 enemy.markedForDeletion = true;
                 base.takeDamage(20, shakeScreen);
+                player.tookDamageThisWave = true;
                 createExplosion(enemy.x, enemy.y, '#f00');
             }
             const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);

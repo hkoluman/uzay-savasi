@@ -293,3 +293,84 @@ button:hover {
     background: #fff;
     box-shadow: 0 0 20px #ff0;
 }
+
+/* Mission System UI */
+#mission-list {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    z-index: 50;
+}
+
+.mission-item {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #fff;
+    transition: all 0.3s;
+    backdrop-filter: blur(5px);
+}
+
+.mission-item.completed {
+    border-color: #0f0;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    opacity: 0.8;
+}
+
+.mission-title {
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #0ff;
+}
+
+.mission-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.mission-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #0ff, #0a0);
+    width: 0%;
+    transition: width 0.5s ease-out;
+}
+
+.mission-status {
+    text-align: right;
+    font-size: 10px;
+    margin-top: 3px;
+    color: #aaa;
+}
+
+.mission-toast {
+    position: fixed;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #0a0, #030);
+    color: #fff;
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+    z-index: 9999;
+    transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid #0f0;
+    pointer-events: none;
+}
+
+.mission-toast.show {
+    top: 40px;
+}
+
