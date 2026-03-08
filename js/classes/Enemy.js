@@ -33,7 +33,10 @@ export class Enemy {
             this.spriteKey = isCycle7 ? 'playerShips7' : 'playerShips8';
         } else if (this.type === 'STRIKE_FIGHTER') {
             this.spriteKey = 'playerShips8';
+        } else if (this.type === 'KAMIKAZE') {
+            this.spriteKey = 'playerShips9';
         }
+        
         // Apply rotation / scale correction flag
         this.isCustomSprite = this.spriteKey.startsWith('playerShips');
 
