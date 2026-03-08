@@ -248,24 +248,27 @@ function spawnEnemies(timestamp) {
         let x = Math.random() * (canvas.width - padding * 2) + padding;
         const stats = WaveManager.getEnemyStats();
 
-        let type = 'NORMAL';
-        const rand = Math.random();
-        
-        // Elite Enemy Rotation (Every 6 waves)
+        // Elite Enemy Rotation Logic (Every 6 waves)
         const currentWave = WaveManager.currentWave;
-        let eliteType = 'ADVANCED_FIGHTER';
+        let eliteType = 'ADVANCED_FIGHTER'; // Default (Type 7)
+        
         if (currentWave >= 6) {
             const cycle = Math.floor((currentWave - 6) / 6);
+            // Cycle 0 (Wave 6-11): STRIKE_FIGHTER (Type 8)
+            // Cycle 1 (Wave 12-17): ADVANCED_FIGHTER (Type 7)
             eliteType = (cycle % 2 === 0) ? 'STRIKE_FIGHTER' : 'ADVANCED_FIGHTER';
         }
 
-        if (rand < 0.25) { // 25% chance for elite/special
-            if (currentWave >= 3) {
-                if (rand < 0.15) type = eliteType;
-                else type = 'KAMIKAZE';
-            }
-        } else if (currentWave >= 4 && rand > 0.85) {
-            type = 'SNIPER';
+        let type = 'NORMAL';
+        const rand = Math.random();
+
+        // Much higher spawn weights for the requested types
+        if (rand < 0.40) {
+            type = eliteType; // 40% chance for the current elite type (7 or 8)
+        } else if (rand < 0.55 && currentWave >= 2) {
+            type = 'KAMIKAZE'; // 15% chance for kamikaze if wave >= 2
+        } else if (rand > 0.85 && currentWave >= 4) {
+            type = 'SNIPER'; // 15% chance for sniper if wave >= 4
         }
 
         enemies.push(new Enemy(x, -50, stats, type));
