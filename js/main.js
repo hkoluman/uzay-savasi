@@ -13,6 +13,7 @@ import { SupportDrone } from './classes/SupportDrone.js';
 import { sounds } from './managers/SoundManager.js';
 import { LanguageManager } from './managers/LanguageManager.js';
 import { AssetManager } from './managers/AssetManager.js';
+import { Planet } from './classes/Planet.js';
 
 LanguageManager.updateUI();
 HangarManager.init();
@@ -204,18 +205,31 @@ const particlePool = new Pool(() => new Particle(), (p, x, y, color) => p.reset(
 let powerUps = [];
 let stars = [];
 let nebulas = [];
+let planets = [];
+let speedLines = [];
 
-// Shake effect
+// Shake & VFX
 let shake = 0;
-function shakeScreen(amount) { shake = amount; }
+let glitchTime = 0;
+function shakeScreen(amount) { 
+    shake = amount; 
+    glitchTime = 10; // Trigger glitch on damage
+}
 
 // Loop Vars
 let lastTime = 0;
 let score = 0;
 
 // Setup Background
-for (let i = 0; i < 100; i++) stars.push(new Star(canvas.width, canvas.height));
+for (let i = 0; i < 150; i++) stars.push(new Star(canvas.width, canvas.height));
 for (let i = 0; i < 5; i++) nebulas.push(new Nebula(canvas.width, canvas.height));
+for (let i = 0; i < 1; i++) planets.push(new Planet(canvas.width, canvas.height));
+for (let i = 0; i < 30; i++) speedLines.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    l: Math.random() * 80 + 20,
+    s: Math.random() * 15 + 10
+});
 
 // High Score Logic
 let highScore = localStorage.getItem('neonSpaceShooter_highScore') || 0;
@@ -299,10 +313,12 @@ function createExplosion(x, y, color) {
         particlePool.get(x, y, color);
     }
     // Metallic debris particles
-    const debrisColor = color === '#0ff' ? '#444' : color; // Player debris is darker
+    const debrisColor = color === '#0ff' ? '#444' : color; 
     for (let i = 0; i < 5; i++) {
         particlePool.get(x, y, debrisColor, 'debris');
     }
+    // Shockwave Ring
+    particlePool.get(x, y, color, 'shockwave');
 }
 
 function gameOver() {
@@ -362,13 +378,38 @@ function gameLoop(timestamp) {
         ctx.translate(shakeX, shakeY);
     }
 
+    // Glitch Decrement
+    if (glitchTime > 0) {
+        glitchTime -= deltaTime / 100;
+        if (Math.random() < 0.3) {
+            ctx.filter = `hue-rotate(${Math.random() * 360}deg) brightness(1.2)`;
+            ctx.translate((Math.random() - 0.5) * 10, 0);
+        }
+    }
+
     // Clear background
     ctx.fillStyle = '#000814'; // Darker base space color
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Update & Draw Background Elements
     nebulas.forEach(n => { n.update(); n.draw(ctx); });
+    planets.forEach(p => { p.update(canvas.width, canvas.height); p.draw(ctx); });
     stars.forEach(s => { s.update(); s.draw(ctx); });
+
+    // Speed Lines (Visual Intensity)
+    const intensity = (WaveManager.bossSpawned ? 2 : 1);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    speedLines.forEach(l => {
+        l.y += l.s * intensity;
+        if (l.y > canvas.height) l.y = -l.l;
+        ctx.globalAlpha = 0.2;
+        ctx.beginPath();
+        ctx.moveTo(l.x, l.y);
+        ctx.lineTo(l.x, l.y + l.l);
+        ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
 
     if (gameState.running) {
         window.currentWaveNum = WaveManager.currentWave; // Share with Enemy class

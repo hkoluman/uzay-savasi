@@ -34,6 +34,11 @@ export class Particle {
             this.vx = (Math.random() - 0.5) * 6;
             this.vy = (Math.random() - 0.5) * 6;
             this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+        } else if (type === 'shockwave') {
+            this.radius = 5;
+            this.vx = 0;
+            this.vy = 0;
+            this.rotationSpeed = 0;
         } else {
             this.radius = Math.random() * 3 + 1;
             this.vx = (Math.random() - 0.5) * 8;
@@ -54,6 +59,12 @@ export class Particle {
             // Add a little highlight
             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.fillRect(-this.radius, -this.radius / 2, this.radius, 1);
+        } else if (this.type === 'shockwave') {
+            ctx.strokeStyle = this.color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(0, 0, this.radius * this.sizeScale, 0, Math.PI * 2);
+            ctx.stroke();
         } else {
             ctx.beginPath();
             ctx.arc(0, 0, this.radius * this.sizeScale, 0, Math.PI * 2);
@@ -72,6 +83,9 @@ export class Particle {
         if (this.type === 'smoke') {
             this.alpha -= 0.01;
             this.sizeScale += 0.02; // Expand
+        } else if (this.type === 'shockwave') {
+            this.sizeScale += 0.5;
+            this.alpha -= 0.04;
         } else {
             this.alpha -= 0.02;
         }
