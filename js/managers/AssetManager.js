@@ -13,16 +13,19 @@ export const AssetManager = {
 
     load() {
         const promises = [];
+        console.log('Starting to load assets...');
         for (const [key, src] of Object.entries(this.config)) {
-            promises.push(new Promise((resolve, reject) => {
+            promises.push(new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
                     this.images[key] = img;
+                    console.log(`Loaded: ${key}`);
                     resolve();
                 };
                 img.onerror = () => {
-                    console.error(`Failed to load asset: ${src}`);
-                    reject();
+                    console.error(`ERROR: Failed to load asset: ${src}`);
+                    // Resolve anyway to prevent game from hanging
+                    resolve();
                 };
                 img.src = src;
             }));
@@ -30,7 +33,7 @@ export const AssetManager = {
 
         return Promise.all(promises).then(() => {
             this.loaded = true;
-            console.log('All assets loaded.');
+            console.log('Finished loading attempts for all assets.');
         });
     },
 

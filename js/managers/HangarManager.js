@@ -33,6 +33,7 @@ export const HangarManager = {
     },
 
     init() {
+        console.log('Initializing HangarManager...');
         const savedCredits = localStorage.getItem('neonSpaceShooter_credits');
         const savedUpgrades = localStorage.getItem('neonSpaceShooter_upgrades');
         const savedSkins = localStorage.getItem('neonSpaceShooter_ownedSkins');
@@ -40,15 +41,29 @@ export const HangarManager = {
 
         if (savedCredits) this.credits = parseInt(savedCredits);
         if (savedActiveSkin) this.activeSkin = parseInt(savedActiveSkin);
-        if (savedSkins) this.ownedSkins = JSON.parse(savedSkins);
+        
+        try {
+            if (savedSkins) {
+                this.ownedSkins = JSON.parse(savedSkins);
+                if (!Array.isArray(this.ownedSkins)) this.ownedSkins = [0];
+            }
+        } catch (e) {
+            console.error('Failed to parse ownedSkins, resetting:', e);
+            this.ownedSkins = [0];
+        }
 
-        if (savedUpgrades) {
-            const parsed = JSON.parse(savedUpgrades);
-            this.upgrades = Object.assign({}, this.upgrades, parsed);
+        try {
+            if (savedUpgrades) {
+                const parsed = JSON.parse(savedUpgrades);
+                this.upgrades = Object.assign({}, this.upgrades, parsed);
+            }
+        } catch (e) {
+            console.error('Failed to parse upgrades, resetting:', e);
         }
 
         // --- DEBUG: Infinite Credits ---
         this.credits = 999999;
+        console.log('HangarManager initialized.');
     },
 
     save() {
