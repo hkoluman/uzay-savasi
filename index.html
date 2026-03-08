@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Uzay Savaşı</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-container">
+        <div id="score">SKOR: 0</div>
+        <div id="high-score"
+            style="position: absolute; top: 10px; right: 20px; color: #ff0; font-family: 'Orbitron', sans-serif; font-size: 24px;">
+            REKOR: 0</div>
+        <div id="start-screen">
+            <h1 data-i18n="start_title">NEON UZAY SAVAŞI</h1>
+            <p data-i18n="start_prompt">Başlamak için Tıkla veya <span class="blink">SPACE</span> tuşuna bas</p>
+            <div class="language-selection">
+                <button class="lang-btn" data-lang="tr">TR</button>
+                <button class="lang-btn" data-lang="en">EN</button>
+            </div>
+            <button id="start-hangar-btn" style="margin-top: 20px; border-color: #ff0; color: #ff0;" data-i18n="hangar">HANGAR 🔧</button>
+        </div>
+        <div id="game-over-screen" class="hidden">
+            <h1 data-i18n="game_over">OYUN BİTTİ</h1>
+            <p><span data-i18n="final_score">Son Skor</span>: <span id="final-score">0</span></p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="restart-btn" data-i18n="restart">TEKRAR OYNA</button>
+                <button id="end-hangar-btn" style="border-color: #f80; color: #f80;" data-i18n="hangar">HANGAR 🔧</button>
+            </div>
+        </div>
+
+        <!-- Hangar / Shop UI -->
+        <div id="hangar-screen" class="hidden">
+            <div class="hangar-content">
+                <h2 data-i18n="hangar_title">UÇAK HANGARI</h2>
+                <div class="credit-display"><span data-i18n="credits">KREDİ</span>: <span id="hangar-credits">0</span> 💎</div>
+
+                <div class="upgrade-grid">
+                    <div class="upgrade-item" data-type="fireRate">
+                        <div class="item-info">
+                            <h3 data-i18n="upgrade_fireRate">ATIŞ HIZI</h3>
+                            <p data-i18n="desc_fireRate">Mermiler daha seri çıkar</p>
+                        </div>
+                        <div class="item-controls">
+                            <span class="level">LVL 0</span>
+                            <button class="upgrade-btn"><span data-i18n="upgrade_btn">GELİŞTİR</span> (<span class="cost">0</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-item" data-type="maxSpeed">
+                        <div class="item-info">
+                            <h3 data-i18n="upgrade_maxSpeed">MOTOR GÜCÜ</h3>
+                            <p data-i18n="desc_maxSpeed">Uçuş hızı artar</p>
+                        </div>
+                        <div class="item-controls">
+                            <span class="level">LVL 0</span>
+                            <button class="upgrade-btn"><span data-i18n="upgrade_btn">GELİŞTİR</span> (<span class="cost">0</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-item" data-type="hullStrength">
+                        <div class="item-info">
+                            <h3 data-i18n="upgrade_hullStrength">ZIRH KAPLAMA</h3>
+                            <p data-i18n="desc_hullStrength">Üs dayanıklılığı artar</p>
+                        </div>
+                        <div class="item-controls">
+                            <span class="level">LVL 0</span>
+                            <button class="upgrade-btn"><span data-i18n="upgrade_btn">GELİŞTİR</span> (<span class="cost">0</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-item" data-type="missileCap">
+                        <div class="item-info">
+                            <h3 data-i18n="upgrade_missileCap">ROKET KAPASİTESİ</h3>
+                            <p data-i18n="desc_missileCap">Başlangıç mühimmatı artar</p>
+                        </div>
+                        <div class="item-controls">
+                            <span class="level">LVL 0</span>
+                            <button class="upgrade-btn"><span data-i18n="upgrade_btn">GELİŞTİR</span> (<span class="cost">5</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-item" data-type="critChance">
+                        <div class="item-info">
+                            <h3 data-i18n="upgrade_critChance">KRİTİK VURUŞ</h3>
+                            <p data-i18n="desc_critChance">%5 şansla x2 Hasar</p>
+                        </div>
+                        <div class="item-controls">
+                            <span class="level">LVL 0</span>
+                            <button class="upgrade-btn"><span data-i18n="upgrade_btn">GELİŞTİR</span> (<span class="cost">10</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-item" data-type="magnetRange">
+                        <div class="item-info">
+                            <h3 data-i18n="upgrade_magnetRange">MAGNET MENZİLİ</h3>
+                            <p data-i18n="desc_magnetRange">Eşyaları uzaktan çeker</p>
+                        </div>
+                        <div class="item-controls">
+                            <span class="level">LVL 0</span>
+                            <button class="upgrade-btn"><span data-i18n="upgrade_btn">GELİŞTİR</span> (<span class="cost">5</span>)</button>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-item" data-type="droneLevel">
+                        <div class="item-info">
+                            <h3 data-i18n="upgrade_droneLevel">YARDIMCI DRONE</h3>
+                            <p data-i18n="desc_droneLevel">Otomatik ateş eden robot</p>
+                        </div>
+                        <div class="item-controls">
+                            <span class="level">LVL 0</span>
+                            <button class="upgrade-btn"><span data-i18n="upgrade_btn">GELİŞTİR</span> (<span class="cost">50</span>)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hangar-section"
+                    style="margin-top: 30px; border-top: 1px solid rgba(0,255,255,0.2); padding-top: 20px;">
+                    <h2 style="color: #0ff; text-shadow: 0 0 10px #0ff;" data-i18n="skins">GÖRÜNÜM (SKINLER)</h2>
+                    <div id="skins-list"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                        <!-- Dynamically filled by main.js -->
+                    </div>
+                </div>
+
+                <div class="hangar-actions" style="margin-top: 30px;">
+                    <button id="hangar-close-btn" class="ui-btn" data-i18n="back_to_battle">SAVAŞA DÖN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
