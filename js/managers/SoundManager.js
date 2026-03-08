@@ -1,28 +1,42 @@
 export class SoundManager {
     constructor() {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        this.masterVolume = 0.3;
-        this.enabled = true;
+        this.ctx = null;
+        this.masterVolume = 0.15; // Lowered from 0.3
+        this.enabled = localStorage.getItem('gameMuted') !== 'true';
     }
 
-    // Play a simple synthesized beep for shooting
+    init() {
+        if (!this.ctx) {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    toggleEnabled() {
+        this.enabled = !this.enabled;
+        localStorage.setItem('gameMuted', !this.enabled);
+        return this.enabled;
+    }
+
     playShoot() {
         if (!this.enabled) return;
-        this.playTone(400, 100, 'square', 0.1, 0.01);
+        this.init();
+        // Sine wave is much softer than square
+        this.playTone(350, 80, 'sine', 0.15, 0.05);
     }
 
-    // Play an explosion sound (noise)
     playExplosion() {
         if (!this.enabled) return;
-        const dur = 0.3;
+        this.init();
+        const dur = 0.4;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
 
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+        // Use triangle for a softer "thump"
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
 
-        gain.gain.setValueAtTime(this.masterVolume, this.ctx.currentTime);
+        gain.gain.setValueAtTime(this.masterVolume * 0.5, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
 
         osc.connect(gain);
@@ -33,6 +47,8 @@ export class SoundManager {
     }
 
     playTone(freq, durMs, type = 'sine', vol = 0.2, fadeOut = 0.05) {
+        if (!this.enabled) return;
+        this.init();
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
 
@@ -51,9 +67,9 @@ export class SoundManager {
 
     playPowerUp() {
         if (!this.enabled) return;
-        this.playTone(600, 100, 'sine', 0.5);
-        setTimeout(() => this.playTone(800, 100, 'sine', 0.5), 100);
-        setTimeout(() => this.playTone(1000, 200, 'sine', 0.5), 200);
+        this.init();
+        this.playTone(500, 150, 'sine', 0.3);
+        setTimeout(() => this.playTone(700, 150, 'sine', 0.3), 120);
     }
 }
 

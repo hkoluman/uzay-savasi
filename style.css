@@ -22,8 +22,7 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
-    /* UI tıklarını oyuna geçirme, şimdilik */
+    pointer-events: auto;
 }
 
 #score {
@@ -33,6 +32,22 @@ canvas {
     font-size: 24px;
     color: #0ff;
     text-shadow: 0 0 10px #0ff;
+}
+
+#mute-btn {
+    position: absolute;
+    top: 60px;
+    left: 20px;
+    font-size: 30px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 1000;
+    transition: transform 0.2s;
+    filter: drop-shadow(0 0 5px #fff);
+}
+
+#mute-btn:hover {
+    transform: scale(1.2);
 }
 
 #start-screen,

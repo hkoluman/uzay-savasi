@@ -52,6 +52,18 @@ document.getElementById('restart-btn').addEventListener('click', () => {
     initGame();
 });
 
+const muteBtn = document.getElementById('mute-btn');
+const updateMuteIcon = () => {
+    muteBtn.textContent = sounds.enabled ? '🔊' : '🔇';
+    muteBtn.style.opacity = sounds.enabled ? '1' : '0.5';
+};
+updateMuteIcon();
+muteBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sounds.toggleEnabled();
+    updateMuteIcon();
+});
+
 document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         LanguageManager.setLanguage(btn.dataset.lang);
