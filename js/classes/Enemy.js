@@ -5,8 +5,8 @@ export class Enemy {
     constructor(x, y, stats = { health: 1, level: 0 }, type = 'NORMAL') {
         this.x = x;
         this.y = y;
-        this.width = 45; 
-        this.height = 45;
+        this.width = 70; 
+        this.height = 70;
         this.type = type; // NORMAL, KAMIKAZE, SNIPER, ADVANCED_FIGHTER, STRIKE_FIGHTER
 
         // Stats
