@@ -61,12 +61,25 @@ export const HangarManager = {
             console.error('Failed to parse upgrades, resetting:', e);
         }
 
-        // --- DEBUG: Infinite Credits ---
-        this.credits = 999999;
         console.log('HangarManager initialized.');
+        
+        // Setup debounced save
+        this._saveTimeout = null;
+    },
+
+    requestSave() {
+        if (this._saveTimeout) return;
+        this._saveTimeout = setTimeout(() => {
+            this.save();
+            this._saveTimeout = null;
+        }, 2000); // Save at most every 2 seconds
     },
 
     save() {
+        if (this._saveTimeout) {
+            clearTimeout(this._saveTimeout);
+            this._saveTimeout = null;
+        }
         localStorage.setItem('neonSpaceShooter_credits', this.credits);
         localStorage.setItem('neonSpaceShooter_upgrades', JSON.stringify(this.upgrades));
         localStorage.setItem('neonSpaceShooter_ownedSkins', JSON.stringify(this.ownedSkins));
@@ -75,7 +88,7 @@ export const HangarManager = {
 
     addCredits(amount) {
         this.credits += Math.floor(amount / 10); // 10 score = 1 credit
-        this.save();
+        this.requestSave();
     },
 
     upgrade(type) {
@@ -86,7 +99,7 @@ export const HangarManager = {
         if (this.credits >= cost) {
             this.credits -= cost;
             this.upgrades[type]++;
-            this.save();
+            this.save(); // Immediate save for purchases
             return true;
         }
         return false;

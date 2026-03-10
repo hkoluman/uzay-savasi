@@ -74,8 +74,14 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
 });
 
 // --- Hangar Logic ---
-function updateHangarUI() {
+function updateHangarUI(forceRebuild = false) {
+    const hangarScreen = document.getElementById('hangar-screen');
+    const isVisible = !hangarScreen.classList.contains('hidden');
+
     document.getElementById('hangar-credits').innerText = HangarManager.credits;
+
+    // Sadece hangar açıkken veya zorunlu olduğunda pahalı UI işlemlerini yap
+    if (!isVisible && !forceRebuild) return;
 
     document.querySelectorAll('.upgrade-item').forEach(item => {
         const type = item.dataset.type;
@@ -121,8 +127,14 @@ function updateHangarUI() {
     }
 }
 
+function hideAllUI() {
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('hangar-screen').classList.add('hidden');
+}
+
 function openHangar() {
-    updateHangarUI();
+    updateHangarUI(true);
     document.getElementById('hangar-screen').classList.remove('hidden');
 }
 
@@ -241,6 +253,9 @@ function initGame() {
     gameState.gameOver = false;
     score = 0;
 
+    // Tüm UI ekranlarını temizle
+    hideAllUI();
+
     // Update Score UI
     document.getElementById('score').innerText = `${LanguageManager.get('score')}: 0`;
     document.getElementById('high-score').innerText = `${LanguageManager.get('high_score')}: ${highScore}`;
@@ -266,8 +281,14 @@ function initGame() {
 
 window.addCredits = (amount) => {
     HangarManager.credits += amount;
-    HangarManager.save();
-    updateHangarUI();
+    HangarManager.requestSave();
+    
+    // Throttle UI updates durante a batalha para 100ms
+    const now = performance.now();
+    if (!window._lastHangarUIUpdate || now - window._lastHangarUIUpdate > 100) {
+        updateHangarUI();
+        window._lastHangarUIUpdate = now;
+    }
 };
 
 function spawnEnemies(timestamp) {
@@ -314,7 +335,7 @@ function spawnEnemies(timestamp) {
 
 function createExplosion(x, y, color) {
     if (sounds) sounds.playExplosion();
-    // Expose for projectile smoke
+    // Expose for projectile smoke (Missile needs this)
     window.particlePool = particlePool;
 
     // Explosive light particles
@@ -371,7 +392,7 @@ function gameLoop(timestamp) {
         window.lastFpsTime = timestamp;
     }
 
-    // Shake logic
+    // Shake & Glitch logic
     let shakeX = 0, shakeY = 0;
     let shaking = false;
     if (shake > 0) {
@@ -382,42 +403,77 @@ function gameLoop(timestamp) {
         shaking = true;
     }
 
-    if (shaking) {
+    const needsRestore = shaking || glitchTime > 0;
+    if (needsRestore) {
         ctx.save();
-        ctx.translate(shakeX, shakeY);
+        if (shaking) ctx.translate(shakeX, shakeY);
     }
 
-    // Glitch Decrement
+    // Glitch Decrement (Cheaper alternative to filters)
     if (glitchTime > 0) {
         glitchTime -= deltaTime / 100;
         if (Math.random() < 0.3) {
-            ctx.filter = `hue-rotate(${Math.random() * 360}deg) brightness(1.2)`;
+            ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.1})`;
+            ctx.fillRect(-20, -20, canvas.width + 40, canvas.height + 40);
             ctx.translate((Math.random() - 0.5) * 10, 0);
         }
     }
 
     // Clear background
-    ctx.fillStyle = '#000814'; // Darker base space color
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#000814'; 
+    ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
 
-    // Update & Draw Background Elements
-    nebulas.forEach(n => { n.update(); n.draw(ctx); });
-    planets.forEach(p => { p.update(canvas.width, canvas.height); p.draw(ctx); });
-    stars.forEach(s => { s.update(); s.draw(ctx); });
+    // Update & Draw Background Elements (Throttled for performance)
+    if (!window._bgTick) window._bgTick = 0;
+    window._bgTick++;
+    
+    // Process background logic every frame, but we could skip drawing if needed
+    nebulas.forEach(n => n.update());
+    planets.forEach(p => p.update(canvas.width, canvas.height));
+    stars.forEach(s => s.update());
 
-    // Speed Lines (Visual Intensity)
+    // Only draw detailed BG every 2 frames if struggling
+    if (window.fps > 45 || window._bgTick % 2 === 0) {
+        nebulas.forEach(n => n.draw(ctx));
+        planets.forEach(p => p.draw(ctx));
+    }
+
+    // Batch draw normal stars
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    stars.forEach(s => {
+        if (!s.isShootingStar) {
+            ctx.moveTo(s.x, s.y);
+            ctx.arc(s.x, s.y, Math.max(0.1, s.size), 0, Math.PI * 2);
+        }
+    });
+    ctx.fill();
+
+    // Draw shooting stars individually
+    ctx.lineWidth = 2;
+    stars.forEach(s => {
+        if (s.isShootingStar) {
+            ctx.beginPath();
+            ctx.strokeStyle = s.color || '#fff';
+            ctx.moveTo(s.x, s.y);
+            ctx.lineTo(s.x - Math.cos(s.angle) * 30, s.y - Math.sin(s.angle) * 30);
+            ctx.stroke();
+        }
+    });
+
+    // Batch Draw Speed Lines
     const intensity = (WaveManager.bossSpawned ? 2 : 1);
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.2;
+    ctx.beginPath();
     speedLines.forEach(l => {
         l.y += l.s * intensity;
         if (l.y > canvas.height) l.y = -l.l;
-        ctx.globalAlpha = 0.2;
-        ctx.beginPath();
         ctx.moveTo(l.x, l.y);
         ctx.lineTo(l.x, l.y + l.l);
-        ctx.stroke();
     });
+    ctx.stroke();
     ctx.globalAlpha = 1;
 
     if (gameState.running) {
@@ -637,9 +693,13 @@ function gameLoop(timestamp) {
             }
         }
     }
-
-    if (shaking) {
+    // End frame state restore
+    if (needsRestore) {
         ctx.restore();
     }
+    
+    // Safety fallback: ensure global state is clean for next frame
+    ctx.globalAlpha = 1;
+    
     requestAnimationFrame(gameLoop);
 }

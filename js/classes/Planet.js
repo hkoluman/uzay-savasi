@@ -19,23 +19,19 @@ export class Planet {
         this.palette = palettes[Math.floor(Math.random() * palettes.length)];
         this.angle = Math.random() * Math.PI * 2;
         this.rotationSpeed = (Math.random() - 0.5) * 0.001;
-    }
 
-    update(canvasWidth, canvasHeight) {
-        this.y += this.speed;
-        this.angle += this.rotationSpeed;
-        if (this.y > canvasHeight + this.size) {
-            this.reset(canvasWidth, canvasHeight);
-        }
-    }
+        // Pre-render to offscreen canvas
+        this.offscreen = document.createElement('canvas');
+        const buffer = this.size * 2.5;
+        this.offscreen.width = buffer;
+        this.offscreen.height = buffer;
+        const octx = this.offscreen.getContext('2d');
+        const center = buffer / 2;
 
-    draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
+        octx.translate(center, center);
 
         // Core shadow/body
-        const grad = ctx.createRadialGradient(
+        const grad = octx.createRadialGradient(
             -this.size * 0.3, -this.size * 0.3, this.size * 0.1,
             0, 0, this.size
         );
@@ -43,34 +39,40 @@ export class Planet {
         grad.addColorStop(0.4, this.palette.secondary);
         grad.addColorStop(1, this.palette.base);
 
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size, 0, Math.PI * 2);
-        ctx.fill();
+        octx.fillStyle = grad;
+        octx.beginPath();
+        octx.arc(0, 0, this.size, 0, Math.PI * 2);
+        octx.fill();
 
         // Atmospheric glow
-        const glow = ctx.createRadialGradient(0, 0, this.size * 0.8, 0, 0, this.size * 1.2);
+        const glow = octx.createRadialGradient(0, 0, this.size * 0.8, 0, 0, this.size * 1.2);
         glow.addColorStop(0, 'transparent');
         glow.addColorStop(0.8, this.palette.secondary + '33');
         glow.addColorStop(1, 'transparent');
 
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(0, 0, this.size * 1.2, 0, Math.PI * 2);
-        ctx.fill();
+        octx.fillStyle = glow;
+        octx.beginPath();
+        octx.arc(0, 0, this.size * 1.2, 0, Math.PI * 2);
+        octx.fill();
 
-        // Subtle craters or surface details (procedural)
-        ctx.globalAlpha = 0.2;
-        ctx.fillStyle = '#000';
+        // Subtle craters or surface details
+        octx.globalAlpha = 0.2;
+        octx.fillStyle = '#000';
         for (let i = 0; i < 5; i++) {
             const cx = Math.sin(i * 137.5) * this.size * 0.5;
             const cy = Math.cos(i * 137.5) * this.size * 0.5;
             const cs = Math.random() * 20 + 10;
-            ctx.beginPath();
-            ctx.arc(cx, cy, cs, 0, Math.PI * 2);
-            ctx.fill();
+            octx.beginPath();
+            octx.arc(cx, cy, cs, 0, Math.PI * 2);
+            octx.fill();
         }
+    }
 
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.drawImage(this.offscreen, -this.offscreen.width/2, -this.offscreen.height/2);
         ctx.restore();
     }
 }

@@ -22,22 +22,28 @@ export class Nebula {
             'rgba(0, 255, 150,'  // Teal
         ];
         this.baseColor = colors[Math.floor(Math.random() * colors.length)];
-    }
-
-    draw(ctx) {
-        ctx.save();
-        const gradient = ctx.createRadialGradient(
-            this.x, this.y, 0,
-            this.x, this.y, this.size
+        
+        // Pre-render to offscreen canvas
+        this.offscreen = document.createElement('canvas');
+        this.offscreen.width = this.size * 2;
+        this.offscreen.height = this.size * 2;
+        const octx = this.offscreen.getContext('2d');
+        
+        const gradient = octx.createRadialGradient(
+            this.size, this.size, 0,
+            this.size, this.size, this.size
         );
         gradient.addColorStop(0, this.baseColor + this.opacity + ')');
         gradient.addColorStop(1, this.baseColor + '0)');
 
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        octx.fillStyle = gradient;
+        octx.beginPath();
+        octx.arc(this.size, this.size, this.size, 0, Math.PI * 2);
+        octx.fill();
+    }
+
+    draw(ctx) {
+        ctx.drawImage(this.offscreen, this.x - this.size, this.y - this.size);
     }
 
     update() {

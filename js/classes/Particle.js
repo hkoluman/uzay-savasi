@@ -48,31 +48,37 @@ export class Particle {
     }
 
     draw(ctx) {
-        ctx.save();
         ctx.globalAlpha = this.alpha;
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
 
         if (this.type === 'debris') {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
             ctx.fillStyle = this.color;
             ctx.fillRect(-this.radius, -this.radius / 2, this.radius * 2, this.radius);
-            // Add a little highlight
             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.fillRect(-this.radius, -this.radius / 2, this.radius, 1);
+            ctx.restore();
         } else if (this.type === 'shockwave') {
             ctx.strokeStyle = this.color;
             ctx.lineWidth = 4;
             ctx.beginPath();
-            ctx.arc(0, 0, this.radius * this.sizeScale, 0, Math.PI * 2);
+            ctx.arc(this.x, this.y, this.radius * this.sizeScale, 0, Math.PI * 2);
             ctx.stroke();
-        } else {
-            ctx.beginPath();
-            ctx.arc(0, 0, this.radius * this.sizeScale, 0, Math.PI * 2);
+        } else if (this.type === 'smoke') {
             ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius * this.sizeScale, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            // Fast circle draw
+            ctx.arc(this.x, this.y, this.radius * this.sizeScale, 0, Math.PI * 2);
             ctx.fill();
         }
-
-        ctx.restore();
+        
+        ctx.globalAlpha = 1;
     }
 
     update() {

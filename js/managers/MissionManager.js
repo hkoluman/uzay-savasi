@@ -17,29 +17,29 @@ export class MissionManager {
     }
 
     updateProgress(type, data) {
-        this.activeMissions.forEach(m => {
+        let changed = false;
+        this.activeMissions.forEach((m, index) => {
             if (m.completed) return;
 
             if (m.type === type) {
-                if (type === 'kill') m.progress++;
-                if (type === 'kill_type' && data.enemyType === m.targetType) m.progress++;
-                if (type === 'score') m.progress = data.score;
-                if (type === 'no_damage' && data.waveCleared && !data.tookDamage) m.progress++;
+                if (type === 'kill') { m.progress++; changed = true; }
+                if (type === 'kill_type' && data.enemyType === m.targetType) { m.progress++; changed = true; }
+                if (type === 'score' && m.progress !== data.score) { m.progress = data.score; changed = true; }
+                if (type === 'no_damage' && data.waveCleared && !data.tookDamage) { m.progress++; changed = true; }
 
                 if (m.progress >= m.target) {
                     this.completeMission(m);
+                    changed = true;
                 }
+                
+                if (changed) this.updateMissionItem(index);
             }
         });
-        this.updateUI();
     }
 
     completeMission(mission) {
         mission.completed = true;
-        // Credit reward logic will be integrated with HangarManager
         if (window.addCredits) window.addCredits(mission.reward);
-        
-        // Visual feedback
         this.showToast(mission.title_tr + " TAMAMLANDI! +" + mission.reward + " Kredi");
     }
 
@@ -48,15 +48,34 @@ export class MissionManager {
         if (!container) return;
 
         const lang = localStorage.getItem('gameLanguage') || 'tr';
-        container.innerHTML = this.activeMissions.map(m => `
-            <div class="mission-item ${m.completed ? 'completed' : ''}">
+        container.innerHTML = this.activeMissions.map((m, i) => `
+            <div id="mission-${i}" class="mission-item ${m.completed ? 'completed' : ''}">
                 <div class="mission-title">${lang === 'tr' ? m.title_tr : m.title_en}</div>
                 <div class="mission-bar">
                     <div class="mission-fill" style="width: ${(m.progress / m.target) * 100}%"></div>
                 </div>
-                <div class="mission-status">${m.progress}/${m.target}</div>
+                <div class="mission-status">${Math.min(m.progress, m.target)}/${m.target}</div>
             </div>
         `).join('');
+        
+        // Cache references
+        this._missionNodes = this.activeMissions.map((_, i) => ({
+            fill: container.querySelector(`#mission-${i} .mission-fill`),
+            status: container.querySelector(`#mission-${i} .mission-status`),
+            root: container.querySelector(`#mission-${i}`)
+        }));
+    }
+
+    updateMissionItem(index) {
+        if (!this._missionNodes || !this._missionNodes[index]) return;
+        const m = this.activeMissions[index];
+        const nodes = this._missionNodes[index];
+        
+        const pct = Math.min((m.progress / m.target) * 100, 100);
+        nodes.fill.style.width = pct + '%';
+        nodes.status.innerText = `${Math.min(m.progress, m.target)}/${m.target}`;
+        
+        if (m.completed) nodes.root.classList.add('completed');
     }
 
     showToast(text) {

@@ -51,7 +51,7 @@ export class Enemy {
 
         this.markedForDeletion = false;
         this.canShoot = (this.type !== 'KAMIKAZE') && (Math.random() < 0.2 + (this.level * 0.05) || this.type === 'ADVANCED_FIGHTER' || this.type === 'STRIKE_FIGHTER');
-        this.lastShot = Date.now();
+        this.lastShot = performance.now();
         this.fireRate = Math.max(800, 2000 - (this.level * 200));
         
         if (this.type === 'SNIPER') this.fireRate = 1200;
