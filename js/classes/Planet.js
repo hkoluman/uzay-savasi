@@ -8,7 +8,7 @@ export class Planet {
         this.x = Math.random() * canvasWidth;
         this.y = initial ? Math.random() * canvasHeight : -this.size * 2;
         this.speed = Math.random() * 0.2 + 0.1;
-        
+
         // Random sophisticated color palettes
         const palettes = [
             { base: '#1a2a6c', secondary: '#b21f1f', accent: '#fdbb2d' }, // Sunset
@@ -72,7 +72,15 @@ export class Planet {
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.angle);
-        ctx.drawImage(this.offscreen, -this.offscreen.width/2, -this.offscreen.height/2);
+        ctx.drawImage(this.offscreen, -this.offscreen.width / 2, -this.offscreen.height / 2);
         ctx.restore();
+    }
+
+    update(canvasWidth, canvasHeight) {
+        this.y += this.speed;
+        this.angle += this.rotationSpeed;
+        if (this.y - this.size > canvasHeight) {
+            this.reset(canvasWidth, canvasHeight);
+        }
     }
 }

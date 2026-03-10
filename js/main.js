@@ -15,7 +15,6 @@ import { LanguageManager } from './managers/LanguageManager.js';
 import { AssetManager } from './managers/AssetManager.js';
 import { Planet } from './classes/Planet.js';
 import { Missions } from './managers/MissionManager.js';
-
 LanguageManager.updateUI();
 HangarManager.init();
 
@@ -224,8 +223,8 @@ let speedLines = [];
 // Shake & VFX
 let shake = 0;
 let glitchTime = 0;
-function shakeScreen(amount) { 
-    shake = amount; 
+function shakeScreen(amount) {
+    shake = amount;
     glitchTime = 10; // Trigger glitch on damage
 }
 
@@ -261,7 +260,7 @@ function initGame() {
     document.getElementById('high-score').innerText = `${LanguageManager.get('high_score')}: ${highScore}`;
 
     player = new Player(canvas.width / 2, canvas.height - 100);
-    player.tookDamageThisWave = false; 
+    player.tookDamageThisWave = false;
     window.playerRef = player;
     base = new Base(canvas.width, canvas.height, gameOver);
 
@@ -282,7 +281,7 @@ function initGame() {
 window.addCredits = (amount) => {
     HangarManager.credits += amount;
     HangarManager.requestSave();
-    
+
     // Throttle UI updates durante a batalha para 100ms
     const now = performance.now();
     if (!window._lastHangarUIUpdate || now - window._lastHangarUIUpdate > 100) {
@@ -307,7 +306,7 @@ function spawnEnemies(timestamp) {
         // Elite Enemy Rotation Logic (Every 6 waves)
         const currentWave = WaveManager.currentWave;
         let eliteType = 'ADVANCED_FIGHTER'; // Default (Type 7)
-        
+
         if (currentWave >= 6) {
             const cycle = Math.floor((currentWave - 6) / 6);
             // Cycle 0 (Wave 6-11): STRIKE_FIGHTER (Type 8)
@@ -343,7 +342,7 @@ function createExplosion(x, y, color) {
         particlePool.get(x, y, color);
     }
     // Metallic debris particles
-    const debrisColor = color === '#0ff' ? '#444' : color; 
+    const debrisColor = color === '#0ff' ? '#444' : color;
     for (let i = 0; i < 5; i++) {
         particlePool.get(x, y, debrisColor, 'debris');
     }
@@ -420,13 +419,13 @@ function gameLoop(timestamp) {
     }
 
     // Clear background
-    ctx.fillStyle = '#000814'; 
+    ctx.fillStyle = '#000814';
     ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
 
     // Update & Draw Background Elements (Throttled for performance)
     if (!window._bgTick) window._bgTick = 0;
     window._bgTick++;
-    
+
     // Process background logic every frame, but we could skip drawing if needed
     nebulas.forEach(n => n.update());
     planets.forEach(p => p.update(canvas.width, canvas.height));
@@ -543,7 +542,7 @@ function gameLoop(timestamp) {
                             score += 10 + (enemy.level * 5);
                             document.getElementById('score').innerText = LanguageManager.get('score') + ': ' + score;
                             createExplosion(enemy.x, enemy.y, enemy.color);
-                            
+
                             // Mission Progress
                             Missions.updateProgress('kill');
                             Missions.updateProgress('kill_type', { enemyType: enemy.type });
@@ -697,9 +696,9 @@ function gameLoop(timestamp) {
     if (needsRestore) {
         ctx.restore();
     }
-    
+
     // Safety fallback: ensure global state is clean for next frame
     ctx.globalAlpha = 1;
-    
+
     requestAnimationFrame(gameLoop);
 }
